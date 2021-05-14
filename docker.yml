@@ -1,4 +1,4 @@
-- hosts: node1
+- hosts: node2
   vars:
           - docker_pkg: docker-py
           - docker_service: docker
