@@ -1,0 +1,51 @@
+- hosts: node1
+  vars:
+          - docker_pkg: docker-py
+          - docker_service: docker
+          - docker_image: httpd
+  tasks:
+
+          - name: add docker repo
+            yum_repository:
+                    name: docker
+                    description: docker repository
+                    baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+                    gpgcheck: false
+
+          - name: make cache
+            shell:
+                    cmd: dnf makecache 
+
+          - name: make repolist
+            shell:
+                    cmd: dnf repolist
+
+          - name: install docker-py
+            pip:
+                    name: "{{  docker_pkg  }}"
+                    state: present
+
+
+          - name: installing docker from yum
+            shell:
+                    cmd: yum install docker-ce -y --nobest
+  
+          - name: Starting docker service
+            service:
+                    name: "{{  docker_service  }}"
+                    state: restarted
+
+          - name: pulling httpd image
+            docker_image:
+                    name: "{{  docker_image  }}"
+                    source: pull
+
+          - name: docker container
+            docker_container:
+                    name: mynewos
+                    image: "{{  docker_image  }}"
+                    state: started
+                    interactive: True
+                    timeout: 120
+                    volumes: /htdocs:/usr/local/apache2/htdocs
+                    published_ports: 8080:80
