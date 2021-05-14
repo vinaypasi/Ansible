@@ -1,0 +1,58 @@
+- hosts: node3
+  tasks:
+
+          - name: configuring yum repo
+            yum_repository:
+                    name: appstream
+                    description: my appstream repo
+                    baseurl: file:///dvd/AppStream
+                    gpgcheck: yes
+                    gpgkey: file:///dvd/RPM-GPG-KEY-redhat-release
+
+          - name: configuring yum repo
+            yum_repository:
+                    name: baseos
+                    description: my Baseos repo
+                    baseurl: file:///dvd/BaseOS
+                    gpgcheck: yes
+                    gpgkey: file:///dvd/RPM-GPG-KEY-redhat-release
+  
+          - name: making cache
+            shell:
+                    cmd: dnf makecache
+  
+          - name: making cache
+            shell:
+                    cmd: dnf repolist
+
+          - name: installing httpd from yum
+            yum:
+                    name: httpd
+                    state: latest
+  
+          - name: Adding httpd to firewalld
+            firewalld:
+                    service: https
+                    permanent: yes
+                    state: enabled
+ 
+          - name: Adding httpd to firewalld
+            firewalld:
+                    port: 80/tcp
+                    permanent: yes
+                    state: enabled
+ 
+          - name: creating index.html
+            copy:
+                    content: 'this is my html file'
+                    dest: /var/www/html/index.html
+
+          - name: Starting httpd service
+            service:
+                    name: httpd
+                    state: restarted
+
+          - name: restarting firewalld
+            service:
+                    name: firewalld
+                    state: restarted

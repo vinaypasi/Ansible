@@ -1,0 +1,41 @@
+- hosts: node3
+  tasks:
+        - name: creating dvd dir
+          file:
+                  path: /dvd
+                  state: directory
+                  owner: root
+                  mode: u+rwx
+
+        - name: mounting dvd to the dvd directory
+          mount:
+                  path: /dvd
+                  src: /dev/cdrom
+                  fstype: iso9660
+                  state: mounted
+
+        - name: configuring yum repo
+          yum_repository:
+                  name: appstream
+                  description: my appstream repo
+                  baseurl: file:///dvd/AppStream
+                  gpgcheck: yes
+                  gpgkey: file:///dvd/RPM-GPG-KEY-redhat-release
+      
+        - name: configuring yum repo
+          yum_repository:
+                  name: baseos
+                  description: my Baseos repo
+                  baseurl: file:///dvd/BaseOS
+                  gpgcheck: yes
+                  gpgkey: file:///dvd/RPM-GPG-KEY-redhat-release
+
+        - name: making cache
+          shell:
+                  cmd: dnf makecache
+
+        - name: making cache
+          shell:
+                  cmd: dnf repolist
+
+

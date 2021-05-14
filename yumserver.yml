@@ -1,0 +1,136 @@
+- hosts: node1
+  tasks: 
+         - name: Check directory exists or not
+           stat:
+                 path: /dvd
+           ignore_errors: yes
+           register: dvd
+
+         - name: Create a directory if it does not exist
+           file:
+                 path: /dvd
+                 state: directory
+                 mode: '0777'
+           when: dvd.stat.islnk is not defined
+           
+         - name: Check if mounted or not
+           stat:
+                 path: /dvd/AppStream/
+           ignore_errors: yes
+           register: moun
+
+         - name: Mount DVD to  /var/ftp/pub/soft/
+           mount:
+                 path: /dvd
+                 src: /dev/cdrom
+                 fstype: iso9660
+                 opts: ro,noauto
+                 state: present
+           ignore_errors: yes
+           when: moun is failed
+
+         - name: stopping and disabling firewalld also starting vsftpd and enabling it
+           shell: mount /dev/cdrom /dvd
+           ignore_errors: yes
+
+         - name: Adding appstream and baseos rep
+           yum_repository:
+                 name: "{{ item.reponame }}"
+                 description: "{{ item.description }}"
+                 file: dvdrepo
+                 baseurl: "{{ item.baseurl }}"
+                 gpgcheck: no 
+                 enabled: yes
+           with_items:
+                   - { reponame: 'appstream', description: 'AppStream repo', baseurl: 'file:///dvd/AppStream' }
+                   - { reponame: 'baseos', description: 'BaseOS repo', baseurl: 'file:///dvd/BaseOS' }
+
+
+         - name: installing vsftpd in node1
+           yum:
+                 name: "{{ packages }}"
+                 state: present
+           vars:
+                 packages:
+                           - vsftpd
+
+         - name: setting selinux to permissive
+           shell: setenforce 0
+           ignore_errors: yes
+
+         - name: Check directory exists or not
+           stat:
+                 path: /var/ftp/pub/soft/
+           ignore_errors: yes
+           register: status
+
+
+         - debug:
+                 msg: "soft directory doesn't exist in /var/ftp/pub/"
+           when: status.stat.islnk is not defined
+
+         - name: Create a directory if it does not exist
+           file:
+                 path: /var/ftp/pub/soft/
+                 state: directory
+                 mode: '0777'
+           when: status.stat.islnk is not defined
+
+         - name: stopping and disabling firewalld also starting vsftpd and enabling it
+           shell: rm -rf "{{ item.file }}"
+           ignore_errors: yes
+           with_items:
+                 - { file: '/etc/vsftpd/vsftpd.conf' }
+                 - { file: '/etc/selinux/config' }
+
+         - name: copying the config files
+           copy:
+                 src: "{{ item.src }}"
+                 dest: "{{ item.dest }}"
+                 owner: root
+                 group: root
+                 mode: u=rwx,g=rwx,o=rwx
+           ignore_errors: yes
+           with_items:
+                 - { src: 'vsftpd.conf', dest: '/etc/vsftpd/' }
+                 - { src: 'config', dest: '/etc/selinux/' }
+
+         - name: Check if mounted or not
+           stat:
+                 path: /var/ftp/pub/soft/AppStream/
+           ignore_errors: yes
+           register: mount
+
+         - name: Mount DVD to  /var/ftp/pub/soft/
+           mount:
+                 path: /var/ftp/pub/soft/
+                 src: /dev/cdrom
+                 fstype: iso9660
+                 opts: ro,noauto
+                 state: present
+           ignore_errors: yes
+           when: mount is failed 
+
+         - name: stopping and disabling firewalld also starting vsftpd and enabling it
+           shell: mount /dev/cdrom /var/ftp/pub/soft
+           ignore_errors: yes
+
+         - name: for local repo
+           lineinfile:
+                 path: /etc/rc.d/rc.local
+                 line: "{{ item.line }}"
+                 mode: u=rwx,g=rx,o=rx
+                 create: yes
+           ignore_errors: yes
+           with_items:
+                 - { line: 'mount /dev/cdrom /var/ftp/pub/soft/' }
+                 - { line: 'mount /dev/cdrom /dvd' }
+
+         - name: stopping and disabling firewalld also starting vsftpd and enabling it
+           shell: systemctl "{{ item.stat }}" "{{ item.service }}"
+           ignore_errors: yes
+           with_items:
+                 - { stat: 'disable', service: 'firewalld' }
+                 - { stat: 'stop', service: 'firewalld' }
+                 - { stat: 'enable', service: 'vsftpd' }
+                 - { stat: 'restart', service: 'vsftpd' }

@@ -1,0 +1,14 @@
+node1
+node2
+node3
+
+[allnodes]
+node[1:5].lw.example.com
+master
+yumserver
+
+[workers]
+node[1:5].lw.example.com
+
+[yumservers]
+yumserver

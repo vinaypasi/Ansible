@@ -1,0 +1,34 @@
+- hosts: node2
+  tasks:
+          - name: installing httpd from yum
+            yum:
+                    name: httpd
+                    state: latest
+
+          - name: Adding httpd to firewalld
+            firewalld:
+                    service: https
+                    permanent: yes
+                    state: enabled
+
+          - name: Adding httpd to firewalld
+            firewalld:
+                    port: 80/tcp
+                    permanent: yes
+                    state: enabled
+
+          - name: creating index.html
+            copy:
+                    content: 'this is my html file'
+                    dest: /var/www/html/index.html
+
+          - name: Starting httpd service
+            service:
+                    name: httpd
+                    state: restarted
+
+           
+          - name: Starting firewalld service
+            service:
+                    name: firewalld
+                    state: restarted

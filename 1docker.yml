@@ -1,0 +1,11 @@
+- hosts: node1.lw.example.com
+  tasks:
+          - name: docker container
+            docker_container:
+                    name: mynewos
+                    image: httpd
+                    state: started
+                    interactive: True
+                    timeout: 120
+                    volumes: /htdocs:/usr/local/apache2/htdocs
+                    published_ports: 8080:80
