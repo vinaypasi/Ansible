@@ -1,6 +1,7 @@
 node1
 node2
 node3
+node4
 
 [allnodes]
 node[1:5].lw.example.com
