@@ -1,0 +1,15 @@
+- hosts: localhost
+  vars_files:
+          - myauthfile.yml
+  tasks:
+          - name: testing task
+            mail:
+                  host: smtp.gmail.com
+                  port: 587
+                  username: "{{ usname }}" 
+                  password: "{{ pswd }}"
+                  to: pasi.vinay@gmail.com
+                  subject: testing ansible mail module
+                  body: hi! this is a test mail
+
+
