@@ -1,6 +1,6 @@
 - hosts: localhost
   vars_files:
-          - myauthfile.yml
+          - /root/workspace/vault/myauthfile.yml
   tasks:
           - name: testing task
             mail:
